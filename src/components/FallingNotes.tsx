@@ -76,7 +76,9 @@ const FallingNotes: React.FC<FallingNotesProps> = ({
   }, [midiData]);
 
   // The falling window always represents a fixed real-time window
-  const effectiveWindow = WINDOW_SECONDS / speed;
+  // On small screens, halve the window to reduce cramping
+  const isMobile = width < 600;
+  const effectiveWindow = (isMobile ? WINDOW_SECONDS / 2 : WINDOW_SECONDS) / speed;
 
   // Filter notes that are visible in the falling window
   const fallingNotes = allNotes.filter(note => (
