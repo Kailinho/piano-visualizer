@@ -25,18 +25,3 @@ A modern, interactive web application for visualizing and practicing piano music
 
 ---
 
-## Project Structure
-
--   `src/components/` — UI components (FallingNotes, PianoVisualizer, FileUpload, etc.)
--   `src/App.tsx` — Main application logic
-
----
-
-## Credits
-
--   [Tone.js](https://tonejs.github.io/)
--   [@tonejs/midi](https://github.com/Tonejs/Midi)
--   [react-konva](https://konvajs.org/docs/react/)
--   Salamander Grand Piano samples
-
----
