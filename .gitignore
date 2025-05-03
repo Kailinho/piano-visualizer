@@ -1,0 +1,34 @@
+# Node modules
+node_modules/
+
+# Build output (if any)
+dist/
+
+# Vercel/Netlify/other deploy configs (optional)
+.vercel/
+.netlify/
+
+# Local environment/config files
+.env
+*.local
+
+# Logs
+*.log
+
+# Editor/OS junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary and unused folders/files
+temp/
+tools/
+server/
+
+# Project planning and future features docs
+PROJECT_PLAN.md
+FURTHER_FEATURES.md
+
+# Editor-specific
+.cursorignore

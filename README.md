@@ -1,0 +1,42 @@
+# Piano MIDI Visualizer
+
+A modern, interactive web application for visualizing and practicing piano music from MIDI files. Upload a MIDI file, watch falling notes and a virtual keyboard, and control playback speed.
+
+---
+
+## Features
+
+-   **MIDI File Upload:** Drag and drop or select a .mid file to visualize.
+-   **Falling Notes Visualization:** See upcoming notes as they "fall" toward the keyboard, making practice intuitive.
+-   **Virtual Piano Keyboard:** Watch keys light up in sync with the music.
+-   **Playback Controls:**
+    -   Play, pause, and restart
+    -   Seek to any part of the song
+    -   Adjust playback speed (audio only)
+
+---
+
+## Tech Stack
+
+-   **React** + **TypeScript**
+-   **Tone.js** and **@tonejs/midi** (audio playback & MIDI parsing)
+-   **react-konva** (canvas-based visualizations)
+-   **Tailwind CSS** (styling)
+
+---
+
+## Project Structure
+
+-   `src/components/` — UI components (FallingNotes, PianoVisualizer, FileUpload, etc.)
+-   `src/App.tsx` — Main application logic
+
+---
+
+## Credits
+
+-   [Tone.js](https://tonejs.github.io/)
+-   [@tonejs/midi](https://github.com/Tonejs/Midi)
+-   [react-konva](https://konvajs.org/docs/react/)
+-   Salamander Grand Piano samples
+
+---
