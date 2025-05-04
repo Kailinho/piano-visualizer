@@ -9,6 +9,7 @@ import SpeedSlider from './components/SpeedSlider'
 import FallingNotes from './components/FallingNotes'
 import PlaybackSlider from './components/PlaybackSlider'
 import { PlaybackControls } from './components/PlaybackControls'
+import { Play, Pause, RotateCcw } from 'lucide-react'
 
 // Responsive window size hook
 function useWindowSize() {
@@ -74,12 +75,20 @@ function App() {
   }, [isPlaying, midiData])
 
   const { width: windowWidth, height: windowHeight } = useWindowSize();
-  // Responsive sizes
   const isMobile = windowWidth < 640;
+  const isTabletLandscape = windowWidth >= 640 && windowWidth < 1024 && windowWidth > windowHeight;
+  const showFloatingControls = (isMobile || isTabletLandscape) && Boolean(midiData);
+  const isLandscape = windowWidth > windowHeight;
   const pianoWidth = Math.min(800, windowWidth - 32);
-  const pianoHeight = isMobile ? Math.min(80, windowHeight * 0.08) : Math.min(200, windowHeight * 0.25);
-  const fallingNotesHeight = isMobile
-    ? Math.min(160, windowHeight * 0.15) + 100
+  // Ensure minimum height for keyboard so octave labels are visible (e.g., 60px on mobile/tablet, 120px on desktop)
+  const pianoHeight = (isMobile || isTabletLandscape)
+    ? Math.max(60, Math.min(80, windowHeight * 0.08))
+    : Math.max(120, Math.min(200, windowHeight * 0.25));
+  // Improved: Use higher minimums and detect landscape mode for mobile/tablet
+  const fallingNotesHeight = (isMobile || isTabletLandscape)
+    ? isLandscape
+      ? Math.max(180, windowHeight * 0.45)
+      : Math.max(220, windowHeight * 0.35)
     : Math.min(300, windowHeight * 0.3);
 
   const handleFileUpload = async (file: File) => {
@@ -262,16 +271,17 @@ function App() {
             </section>
             {midiData && (
               <section className="card rounded-xl sm:rounded-2xl shadow-xl border border-blue-200 flex flex-col items-center w-full justify-center p-2 sm:p-4">
-                <h2 className="text-base sm:text-lg font-semibold mb-2 text-piano-accent text-center">
-                  Playback Controls{fileName ? ` - ${fileName}` : ''}
-                </h2>
-                <PlaybackControls
-                  isPlaying={isPlaying && !isPaused}
-                  onPlayPause={handlePlayPause}
-                  onReset={handleRestart}
-                  disabled={isProcessing || !midiData}
-                  fileName={fileName || undefined}
-                />
+                <h2 className={`text-base sm:text-lg font-semibold mb-2 text-piano-accent text-center${showFloatingControls ? ' text-sm mb-1' : ''}`}>Playback Controls{fileName ? ` - ${fileName}` : ''}</h2>
+                <div className={showFloatingControls ? 'scale-90 opacity-80' : ''}>
+                  <PlaybackControls
+                    isPlaying={isPlaying && !isPaused}
+                    onPlayPause={handlePlayPause}
+                    onReset={handleRestart}
+                    disabled={isProcessing || !midiData}
+                    fileName={fileName || undefined}
+                    hideButtons={showFloatingControls}
+                  />
+                </div>
                 {/* Sliders: Stack on mobile */}
                 <div className="flex flex-col gap-2 w-full">
                   {/* Playback Slider */}
@@ -294,9 +304,9 @@ function App() {
             )}
           </div>
           {/* Piano Visualization */}
-          <section className="card rounded-xl sm:rounded-2xl bg-white/90 shadow-xl border border-blue-200 w-full p-2 sm:p-4">
+          <section className="card rounded-xl sm:rounded-2xl bg-white/90 shadow-xl border border-blue-200 w-full p-2 sm:p-4 relative">
             {midiData && (
-              <div className="w-full flex justify-center mb-2">
+              <div className="w-full flex justify-center mb-2 relative">
                 <FallingNotes
                   midiData={midiData}
                   currentTime={currentTime}
@@ -304,6 +314,37 @@ function App() {
                   height={fallingNotesHeight}
                   speed={speed}
                 />
+                {/* Floating playback controls for mobile/tablet landscape, placed at top right of falling notes area */}
+                {showFloatingControls && (
+                  <div
+                    className="absolute top-2 right-2 z-50 flex gap-3"
+                  >
+                    <button
+                      onClick={handlePlayPause}
+                      disabled={isProcessing || !midiData}
+                      className={`p-3 rounded-full shadow-lg transition-colors ${
+                        isProcessing || !midiData
+                          ? 'bg-gray-200 cursor-not-allowed'
+                          : 'bg-blue-500 hover:bg-blue-600 text-white'
+                      }`}
+                      title={isPlaying && !isPaused ? 'Pause' : 'Play'}
+                    >
+                      {isPlaying && !isPaused ? <Pause size={24} /> : <Play size={24} />}
+                    </button>
+                    <button
+                      onClick={handleRestart}
+                      disabled={isProcessing || !midiData}
+                      className={`p-3 rounded-full shadow-lg transition-colors ${
+                        isProcessing || !midiData
+                          ? 'bg-red-200 cursor-not-allowed'
+                          : 'bg-red-500 hover:bg-red-600 text-white'
+                      }`}
+                      title="Restart"
+                    >
+                      <RotateCcw size={24} />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             <div className="flex justify-center w-full hide-scrollbar">
