@@ -3,7 +3,7 @@ import { Stage, Layer, Rect, Text, Line } from 'react-konva';
 import { Midi } from '@tonejs/midi';
 
 // Utility constants and functions
-const DEFAULT_HEIGHT = 300;
+const DEFAULT_HEIGHT = 500;
 const FIRST_MIDI = 21;
 const LAST_MIDI = 108;
 const midiRange = Array.from({ length: LAST_MIDI - FIRST_MIDI + 1 }, (_, i) => i + FIRST_MIDI);
@@ -19,9 +19,12 @@ function getWhiteKeyIndex(note: number): number {
   return whiteNotes.indexOf(note);
 }
 
+const KEY_PADDING = 2; // px horizontal space between keys
+
 function getKeyPosition(note: number, width: number): { x: number, isBlack: boolean, whiteKeyWidth: number, blackKeyWidth: number } {
   const whiteKeyCount = whiteNotes.length;
-  const whiteKeyWidth = width / whiteKeyCount;
+  const totalPadding = (whiteKeyCount - 1) * KEY_PADDING;
+  const whiteKeyWidth = (width - totalPadding) / whiteKeyCount;
   const blackKeyWidth = whiteKeyWidth * 0.6;
   const isBlack = isBlackKey(note);
   if (isBlack) {
@@ -30,11 +33,13 @@ function getKeyPosition(note: number, width: number): { x: number, isBlack: bool
       leftWhite--;
     }
     const prevWhiteIndex = getWhiteKeyIndex(leftWhite);
-    const x = prevWhiteIndex !== -1 ? (prevWhiteIndex + 1) * whiteKeyWidth - blackKeyWidth / 2 : 0;
+    const x = prevWhiteIndex !== -1
+      ? (prevWhiteIndex + 1) * whiteKeyWidth + prevWhiteIndex * KEY_PADDING - blackKeyWidth / 2 + KEY_PADDING / 2
+      : 0;
     return { x, isBlack, whiteKeyWidth, blackKeyWidth };
   } else {
     const idx = getWhiteKeyIndex(note);
-    const x = idx * whiteKeyWidth;
+    const x = idx * (whiteKeyWidth + KEY_PADDING);
     return { x, isBlack, whiteKeyWidth, blackKeyWidth };
   }
 }
@@ -45,11 +50,12 @@ function midiToNoteName(midi: number): string {
   return `${note}${octave}`;
 }
 
-const WINDOW_SECONDS = 4;
+const WINDOW_SECONDS = 1.5;
 const NOTE_COLOR = '#4F8EF7';
 const NOTE_BORDER = '#23243a';
 const MIN_NOTE_HEIGHT = 24;
 const NOTE_GAP = 2;
+const BOTTOM_MARGIN = 28; // px breathing room above the keyboard
 
 interface FallingNotesProps {
   midiData: Midi;
@@ -75,10 +81,8 @@ const FallingNotes: React.FC<FallingNotesProps> = ({
     return notes;
   }, [midiData]);
 
-  // The falling window always represents a fixed real-time window
-  // On small screens, halve the window to reduce cramping
-  const isMobile = width < 600;
-  const effectiveWindow = (isMobile ? WINDOW_SECONDS / 2 : WINDOW_SECONDS) / speed;
+  // The falling window always represents a fixed real-time window (1.5s on all devices)
+  const effectiveWindow = WINDOW_SECONDS / speed;
 
   // Filter notes that are visible in the falling window
   const fallingNotes = allNotes.filter(note => (
@@ -104,8 +108,9 @@ const FallingNotes: React.FC<FallingNotesProps> = ({
     let lastEndY: number | null = null;
     notes.forEach((note, i) => {
       const { x, isBlack, whiteKeyWidth, blackKeyWidth } = getKeyPosition(note.midi, width);
-      const endY = height - ((note.time - currentTime) / effectiveWindow) * height;
-      const startY = height - ((note.time + note.duration - currentTime) / effectiveWindow) * height;
+      // Shift all notes up by BOTTOM_MARGIN
+      const endY = height - BOTTOM_MARGIN - ((note.time - currentTime) / effectiveWindow) * (height - BOTTOM_MARGIN);
+      const startY = height - BOTTOM_MARGIN - ((note.time + note.duration - currentTime) / effectiveWindow) * (height - BOTTOM_MARGIN);
       const noteWidth = isBlack ? blackKeyWidth : whiteKeyWidth;
       let yTop = Math.min(startY, endY);
       let yBottom = Math.max(startY, endY);
@@ -192,14 +197,6 @@ const FallingNotes: React.FC<FallingNotesProps> = ({
         />
         {/* Render falling notes */}
         {renderedNotes}
-        {/* Landing line at the bottom */}
-        <Line
-          points={[0, landingLineY, width, landingLineY]}
-          stroke="#6A5ACD"
-          strokeWidth={3}
-          opacity={0.7}
-          listening={false}
-        />
       </Layer>
     </Stage>
   );

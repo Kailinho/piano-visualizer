@@ -8,6 +8,7 @@ import * as Tone from 'tone'
 import SpeedSlider from './components/SpeedSlider'
 import FallingNotes from './components/FallingNotes'
 import PlaybackSlider from './components/PlaybackSlider'
+import { PlaybackControls } from './components/PlaybackControls'
 
 // Responsive window size hook
 function useWindowSize() {
@@ -77,7 +78,9 @@ function App() {
   const isMobile = windowWidth < 640;
   const pianoWidth = Math.min(800, windowWidth - 32);
   const pianoHeight = isMobile ? Math.min(80, windowHeight * 0.08) : Math.min(200, windowHeight * 0.25);
-  const fallingNotesHeight = isMobile ? Math.min(160, windowHeight * 0.15) : Math.min(300, windowHeight * 0.3);
+  const fallingNotesHeight = isMobile
+    ? Math.min(160, windowHeight * 0.15) + 100
+    : Math.min(300, windowHeight * 0.3);
 
   const handleFileUpload = async (file: File) => {
     try {
@@ -219,6 +222,7 @@ function App() {
     setIsPaused(false);
     // Instead of starting playback, just reset the transport position to 0
     Tone.Transport.position = 0;
+    setCurrentTime(0); // <-- Instantly reset slider to 0
     // Clear scheduled events
     Tone.Transport.cancel();
     scheduledEventsRef.current.forEach(id => Tone.Transport.clear(id));
@@ -257,27 +261,17 @@ function App() {
               )}
             </section>
             {midiData && (
-              <section className="card rounded-xl sm:rounded-2xl bg-white/90 shadow-xl border border-blue-200 flex flex-col items-center w-full justify-center p-2 sm:p-4">
-                <h2 className="text-base sm:text-lg font-semibold mb-2 text-piano-accent text-center">Playback Controls</h2>
-                {/* Button Row */}
-                <div className="flex flex-row gap-3 justify-center mb-2 sm:mb-3 w-full">
-                  <button
-                    className="btn btn-primary text-lg sm:text-xl px-4 sm:px-5 py-1 sm:py-2"
-                    onClick={handlePlayPause}
-                    disabled={isProcessing || !midiData}
-                    title={isPlaying && !isPaused ? 'Pause' : 'Play'}
-                  >
-                    {isPlaying && !isPaused ? '⏸' : '▶'}
-                  </button>
-                  <button
-                    className="btn btn-secondary text-lg sm:text-xl px-4 sm:px-5 py-1 sm:py-2"
-                    onClick={handleRestart}
-                    disabled={isProcessing || !midiData}
-                    title="Restart"
-                  >
-                    ⏮
-                  </button>
-                </div>
+              <section className="card rounded-xl sm:rounded-2xl shadow-xl border border-blue-200 flex flex-col items-center w-full justify-center p-2 sm:p-4">
+                <h2 className="text-base sm:text-lg font-semibold mb-2 text-piano-accent text-center">
+                  Playback Controls{fileName ? ` - ${fileName}` : ''}
+                </h2>
+                <PlaybackControls
+                  isPlaying={isPlaying && !isPaused}
+                  onPlayPause={handlePlayPause}
+                  onReset={handleRestart}
+                  disabled={isProcessing || !midiData}
+                  fileName={fileName || undefined}
+                />
                 {/* Sliders: Stack on mobile */}
                 <div className="flex flex-col gap-2 w-full">
                   {/* Playback Slider */}
@@ -292,7 +286,7 @@ function App() {
                       }}
                     />
                   </div>
-                  <div className="flex flex-col justify-center">
+                  <div className="flex flex-col items-center justify-center">
                     <SpeedSlider value={speed} onChange={setSpeed} min={0.5} max={2.0} step={0.01} labelPrefix="Speed:" />
                   </div>
                 </div>
@@ -312,14 +306,6 @@ function App() {
                 />
               </div>
             )}
-            <div className="flex flex-row items-center justify-center gap-2 mb-2 sm:mb-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-piano-accent text-center">Piano Visualization</h2>
-              {fileName && (
-                <span className="text-sm sm:text-base text-gray-600 font-mono truncate max-w-[150px] sm:max-w-xs" title={fileName}>
-                  ({fileName})
-                </span>
-              )}
-            </div>
             <div className="flex justify-center w-full hide-scrollbar">
               <PianoVisualizer 
                 width={pianoWidth}
