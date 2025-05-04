@@ -55,7 +55,7 @@ const NOTE_COLOR = '#4F8EF7';
 const NOTE_BORDER = '#23243a';
 const MIN_NOTE_HEIGHT = 24;
 const NOTE_GAP = 2;
-const BOTTOM_MARGIN = 28; // px breathing room above the keyboard
+const BOTTOM_MARGIN = 0; // No margin, notes go to the bottom
 
 interface FallingNotesProps {
   midiData: Midi;
@@ -108,9 +108,9 @@ const FallingNotes: React.FC<FallingNotesProps> = ({
     let lastEndY: number | null = null;
     notes.forEach((note, i) => {
       const { x, isBlack, whiteKeyWidth, blackKeyWidth } = getKeyPosition(note.midi, width);
-      // Shift all notes up by BOTTOM_MARGIN
-      const endY = height - BOTTOM_MARGIN - ((note.time - currentTime) / effectiveWindow) * (height - BOTTOM_MARGIN);
-      const startY = height - BOTTOM_MARGIN - ((note.time + note.duration - currentTime) / effectiveWindow) * (height - BOTTOM_MARGIN);
+      // Notes fall all the way to the bottom (no margin)
+      const endY = height - ((note.time - currentTime) / effectiveWindow) * height;
+      const startY = height - ((note.time + note.duration - currentTime) / effectiveWindow) * height;
       const noteWidth = isBlack ? blackKeyWidth : whiteKeyWidth;
       let yTop = Math.min(startY, endY);
       let yBottom = Math.max(startY, endY);
@@ -184,17 +184,28 @@ const FallingNotes: React.FC<FallingNotesProps> = ({
   return (
     <Stage width={width} height={height}>
       <Layer>
-        {/* Fade-out gradient at the top */}
-        <Rect
-          x={0}
-          y={0}
-          width={width}
-          height={40}
-          fillLinearGradientStartPoint={{ x: 0, y: 0 }}
-          fillLinearGradientEndPoint={{ x: 0, y: 40 }}
-          fillLinearGradientColorStops={[0, '#e3e8f0', 1, 'rgba(227,232,240,0)']}
-          listening={false}
-        />
+        {/* Piano key background bars */}
+        {Array.from({ length: LAST_MIDI - FIRST_MIDI + 1 }, (_, i) => {
+          const midi = i + FIRST_MIDI;
+          const isBlack = isBlackKey(midi);
+          const { x, whiteKeyWidth, blackKeyWidth } = getKeyPosition(midi, width);
+          // Only draw for white keys to avoid overlap
+          if (!isBlack) {
+            return (
+              <Rect
+                key={`bg-bar-${midi}`}
+                x={x}
+                y={0}
+                width={whiteKeyWidth}
+                height={height}
+                fill={i % 2 === 0 ? '#23243a' : '#28294a'} // alternate dark shades
+                opacity={0.85}
+                listening={false}
+              />
+            );
+          }
+          return null;
+        })}
         {/* Render falling notes */}
         {renderedNotes}
       </Layer>

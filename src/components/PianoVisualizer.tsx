@@ -62,8 +62,8 @@ const PianoVisualizer: React.FC<PianoVisualizerProps> = ({ width, height = 200, 
   return (
     <Stage width={width} height={height}>
       <Layer>
-        {/* Background */}
-        <Rect x={0} y={0} width={width} height={height} fill="#23243a" cornerRadius={18} shadowBlur={12} shadowColor="#23243a" />
+        {/* Minimalist Background */}
+        <Rect x={0} y={0} width={width} height={height} fill="#fff" />
         {/* White keys */}
         {whiteNotes.map((note, i) => (
           <React.Fragment key={`white-${note}`}>
@@ -72,9 +72,10 @@ const PianoVisualizer: React.FC<PianoVisualizerProps> = ({ width, height = 200, 
               y={0}
               width={whiteKeyWidth}
               height={height}
-              fill="white"
+              fill="#fff"
               stroke="#bbb"
-              cornerRadius={6}
+              strokeWidth={1}
+              // No corner radius, no shadow
               className="piano-key-white"
             />
             {/* Add C labels on the key itself */}
@@ -82,7 +83,6 @@ const PianoVisualizer: React.FC<PianoVisualizerProps> = ({ width, height = 200, 
               <Text
                 text={`C${Math.floor(note / 12) - 1}`}
                 x={i * whiteKeyWidth}
-                // Responsive y and font size for mobile
                 y={height - (window.innerWidth < 640 ? 22 : 30)}
                 width={whiteKeyWidth}
                 align="center"
@@ -104,9 +104,8 @@ const PianoVisualizer: React.FC<PianoVisualizerProps> = ({ width, height = 200, 
               y={0}
               width={blackKeyWidth}
               height={blackKeyHeight}
-              fill="black"
-              stroke="#23243a"
-              cornerRadius={4}
+              fill="#000"
+              // No corner radius, no shadow
               className="piano-key-black"
             />
           );

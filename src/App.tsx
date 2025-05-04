@@ -84,12 +84,8 @@ function App() {
   const pianoHeight = (isMobile || isTabletLandscape)
     ? Math.max(60, Math.min(80, windowHeight * 0.08))
     : Math.max(120, Math.min(200, windowHeight * 0.25));
-  // Improved: Use higher minimums and detect landscape mode for mobile/tablet
-  const fallingNotesHeight = (isMobile || isTabletLandscape)
-    ? isLandscape
-      ? Math.max(180, windowHeight * 0.45)
-      : Math.max(220, windowHeight * 0.35)
-    : Math.min(300, windowHeight * 0.3);
+  // Make the falling notes area fill all space between sliders and the keyboard
+  const fallingNotesHeight = windowHeight - pianoHeight - 120; // 120px is an estimate for header/sliders, adjust as needed
 
   const handleFileUpload = async (file: File) => {
     try {
@@ -241,122 +237,118 @@ function App() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-piano-bg to-blue-950 flex flex-col items-center overflow-x-hidden">
-      <div className="w-full max-w-4xl flex flex-col gap-2 sm:gap-4 px-1 sm:px-4 py-2 sm:py-8">
-        <header className="flex flex-col items-center gap-2 mb-2 sm:mb-4">
-          <span className="inline-block mb-1">
-            <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="4" y="8" width="40" height="32" rx="8" fill="#22223b"/>
-              <rect x="8" y="12" width="4" height="24" rx="2" fill="#f2e9e4"/>
-              <rect x="16" y="12" width="4" height="24" rx="2" fill="#f2e9e4"/>
-              <rect x="24" y="12" width="4" height="24" rx="2" fill="#f2e9e4"/>
-              <rect x="32" y="12" width="4" height="24" rx="2" fill="#f2e9e4"/>
-              <rect x="40" y="12" width="4" height="24" rx="2" fill="#f2e9e4"/>
-            </svg>
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-extrabold text-piano-accent font-[Quicksand,system-ui,sans-serif] tracking-tight drop-shadow-lg text-center">
-            Piano MIDI Visualizer
-          </h1>
-        </header>
-        <main className="flex flex-col gap-4 sm:gap-8 w-full">
-          {/* Grid for File Upload and Playback Controls */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full mb-2 sm:mb-4">
-            <section className="card rounded-xl sm:rounded-2xl bg-white/80 shadow-xl border border-blue-200 w-full flex flex-col items-center justify-center p-2 sm:p-4">
-              <FileUpload 
-                onFileUpload={handleFileUpload} 
-                isProcessing={isProcessing} 
-              />
-              {error && (
-                <p className="mt-2 sm:mt-4 text-red-500 text-center text-sm sm:text-base">{error}</p>
-              )}
-            </section>
-            {midiData && (
-              <section className="card rounded-xl sm:rounded-2xl shadow-xl border border-blue-200 flex flex-col items-center w-full justify-center p-2 sm:p-4">
-                <h2 className={`text-base sm:text-lg font-semibold mb-2 text-piano-accent text-center${showFloatingControls ? ' text-sm mb-1' : ''}`}>Playback Controls{fileName ? ` - ${fileName}` : ''}</h2>
-                <div className={showFloatingControls ? 'scale-90 opacity-80' : ''}>
-                  <PlaybackControls
-                    isPlaying={isPlaying && !isPaused}
-                    onPlayPause={handlePlayPause}
-                    onReset={handleRestart}
-                    disabled={isProcessing || !midiData}
-                    fileName={fileName || undefined}
-                    hideButtons={showFloatingControls}
-                  />
-                </div>
-                {/* Sliders: Stack on mobile */}
-                <div className="flex flex-col gap-2 w-full">
-                  {/* Playback Slider */}
-                  <div className="flex flex-col justify-center">
-                    <label className="text-xs text-gray-500 mb-1">Seek</label>
-                    <PlaybackSlider
-                      currentTime={currentTime}
-                      duration={midiData ? midiData.duration : 0}
-                      onSeek={time => {
-                        Tone.Transport.seconds = time;
-                        setCurrentTime(time);
-                      }}
-                    />
-                  </div>
-                  <div className="flex flex-col items-center justify-center">
-                    <SpeedSlider value={speed} onChange={setSpeed} min={0.5} max={2.0} step={0.01} labelPrefix="Speed:" />
-                  </div>
-                </div>
-              </section>
-            )}
+      <header className="flex flex-col items-center gap-2 mb-2 sm:mb-4 w-full">
+        <span className="inline-block mb-1">
+          <svg width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="8" width="40" height="32" rx="8" fill="#22223b"/>
+            <rect x="8" y="12" width="4" height="24" rx="2" fill="#f2e9e4"/>
+            <rect x="16" y="12" width="4" height="24" rx="2" fill="#f2e9e4"/>
+            <rect x="24" y="12" width="4" height="24" rx="2" fill="#f2e9e4"/>
+            <rect x="32" y="12" width="4" height="24" rx="2" fill="#f2e9e4"/>
+            <rect x="40" y="12" width="4" height="24" rx="2" fill="#f2e9e4"/>
+          </svg>
+        </span>
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-piano-accent font-[Quicksand,system-ui,sans-serif] tracking-tight drop-shadow-lg text-center">
+          Piano MIDI Visualizer
+        </h1>
+      </header>
+      {/* Sliders above falling notes */}
+      {midiData && (
+        <div className="w-full flex flex-col sm:flex-row gap-2 sm:gap-6 items-center justify-center px-2 sm:px-8 mb-2">
+          <div className="flex-1 w-full max-w-lg">
+            <label className="text-xs text-gray-500 mb-1">Seek</label>
+            <PlaybackSlider
+              currentTime={currentTime}
+              duration={midiData ? midiData.duration : 0}
+              onSeek={time => {
+                Tone.Transport.seconds = time;
+                setCurrentTime(time);
+              }}
+            />
           </div>
-          {/* Piano Visualization */}
-          <section className="card rounded-xl sm:rounded-2xl bg-white/90 shadow-xl border border-blue-200 w-full p-2 sm:p-4 relative">
-            {midiData && (
-              <div className="w-full flex justify-center mb-2 relative">
-                <FallingNotes
-                  midiData={midiData}
-                  currentTime={currentTime}
-                  width={pianoWidth}
-                  height={fallingNotesHeight}
-                  speed={speed}
-                />
-                {/* Floating playback controls for mobile/tablet landscape, placed at top right of falling notes area */}
-                {showFloatingControls && (
-                  <div
-                    className="absolute top-2 right-2 z-50 flex gap-3"
-                  >
-                    <button
-                      onClick={handlePlayPause}
-                      disabled={isProcessing || !midiData}
-                      className={`p-3 rounded-full shadow-lg transition-colors ${
-                        isProcessing || !midiData
-                          ? 'bg-gray-200 cursor-not-allowed'
-                          : 'bg-blue-500 hover:bg-blue-600 text-white'
-                      }`}
-                      title={isPlaying && !isPaused ? 'Pause' : 'Play'}
-                    >
-                      {isPlaying && !isPaused ? <Pause size={24} /> : <Play size={24} />}
-                    </button>
-                    <button
-                      onClick={handleRestart}
-                      disabled={isProcessing || !midiData}
-                      className={`p-3 rounded-full shadow-lg transition-colors ${
-                        isProcessing || !midiData
-                          ? 'bg-red-200 cursor-not-allowed'
-                          : 'bg-red-500 hover:bg-red-600 text-white'
-                      }`}
-                      title="Restart"
-                    >
-                      <RotateCcw size={24} />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="flex justify-center w-full hide-scrollbar">
-              <PianoVisualizer 
-                width={pianoWidth}
-                height={pianoHeight}
-                activeNotes={activeNotes}
-                highlightColor="#4F8EF7"
-              />
+          <div className="flex-1 w-full max-w-xs flex flex-col items-center justify-center">
+            <SpeedSlider value={speed} onChange={setSpeed} min={0.5} max={2.0} step={0.01} labelPrefix="Speed:" />
+          </div>
+        </div>
+      )}
+      {/* Show falling notes area only if MIDI is loaded, otherwise show prompt */}
+      {midiData ? (
+        <section
+          className="shadow-xl border border-blue-200 w-full relative mx-0"
+          style={{
+            maxWidth: '100vw',
+            margin: 0,
+            padding: 0,
+            background: `radial-gradient(ellipse at center, rgba(35,36,58,0.98) 60%, rgba(30,30,47,1) 100%), linear-gradient(135deg, #23243a 0%, #1E1E2F 100%)`,
+          }}
+        >
+          <div className="w-full flex justify-center mb-2 relative" style={{width: '100vw'}}>
+            {/* Upload icon at top left */}
+            <div className="absolute top-2 left-2 z-50">
+              <FileUpload onFileUpload={handleFileUpload} isProcessing={isProcessing} />
             </div>
-          </section>
-        </main>
+            {/* Playback controls at top right */}
+            <div className="absolute top-2 right-2 z-50 flex gap-3">
+              <button
+                onClick={handlePlayPause}
+                disabled={isProcessing || !midiData}
+                className={`p-3 rounded-full transition-colors ${
+                  isProcessing || !midiData
+                    ? 'bg-gray-200 cursor-not-allowed'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+                title={isPlaying && !isPaused ? 'Pause' : 'Play'}
+              >
+                {isPlaying && !isPaused ? <Pause size={24} /> : <Play size={24} />}
+              </button>
+              <button
+                onClick={handleRestart}
+                disabled={isProcessing || !midiData}
+                className={`p-3 rounded-full transition-colors ${
+                  isProcessing || !midiData
+                    ? 'bg-red-200 cursor-not-allowed'
+                    : 'bg-red-500 hover:bg-red-600 text-white'
+                }`}
+                title="Restart"
+              >
+                <RotateCcw size={24} />
+              </button>
+            </div>
+            {/* Falling notes visualization */}
+            <FallingNotes
+              midiData={midiData}
+              currentTime={currentTime}
+              width={window.innerWidth}
+              height={fallingNotesHeight}
+              speed={speed}
+            />
+          </div>
+          <div style={{ marginBottom: 0 }} />
+        </section>
+      ) : (
+        <section className="w-full flex-1 flex items-center justify-center relative" style={{height: fallingNotesHeight, minHeight: 120}}>
+          {/* Upload icon at top left */}
+          <div className="absolute top-2 left-2 z-50">
+            <FileUpload onFileUpload={handleFileUpload} isProcessing={isProcessing} />
+          </div>
+          <div className="w-full flex items-center justify-center">
+            <span className="text-xl sm:text-2xl font-semibold text-piano-accent opacity-80 text-center select-none">
+              Upload a MIDI File to Visualize
+            </span>
+          </div>
+        </section>
+      )}
+      {/* Fixed full-width keyboard at the bottom */}
+      <div
+        className="fixed left-0 bottom-0 w-screen z-40 bg-transparent"
+        style={{ pointerEvents: 'none' }}
+      >
+        <PianoVisualizer
+          width={window.innerWidth}
+          height={pianoHeight}
+          activeNotes={activeNotes}
+          highlightColor="#4F8EF7"
+        />
       </div>
     </div>
   )
