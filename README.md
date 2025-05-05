@@ -1,6 +1,7 @@
 # Piano MIDI Visualizer
 
 A modern, interactive web application for visualizing and practicing piano music from MIDI files. Upload a MIDI file, watch falling notes and a virtual keyboard, and control playback speed.
+This project can also be viewed [here](https://piano-visualizer-indol.vercel.app)
 
 ---
 
