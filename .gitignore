@@ -32,3 +32,4 @@ FURTHER_FEATURES.md
 
 # Editor-specific
 .cursorignore
+*.mid
